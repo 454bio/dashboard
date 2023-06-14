@@ -1,3 +1,7 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import Device, Run, Report, Reservoir
+admin.site.register(Device)
+admin.site.register(Run)
+admin.site.register(Report)
+admin.site.register(Reservoir)

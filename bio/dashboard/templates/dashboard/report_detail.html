@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+Created: {{ report.created_at }}  <br>
+
+  <h1>Title: {{ report.name }} </h1><br>
+
+Device:        <a href="{{ report.run.device.get_absolute_url }}">{{ report.run.device.name }}</a>  <br>
+Run:        <a href="{{ report.run.get_absolute_url }}">{{ report.run.name }}</a>  </h1><br>
+
+
+Location: {{ report.path }} <br>
+
+<br>
+<br>
+<br>
+TODO: show Jose's images, graphs etc here ...
+
+
+{% endblock %}
+
+

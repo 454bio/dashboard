@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% load static %}
+
+<h3></h3><br>
+
+<div class="card">
+  <div class="card-header">
+    <h1>Run: {{ run.name }}</h1>
+  </div>
+  <div class="card-body">
+    <h5 class="card-title">Device: <a href="{{ run.device.get_absolute_url }}">{{ run.device.name }}</a></h5>
+    <p class="card-text">Reservoir: <a href="{% url 'reservoirs' %}">{{ run.reservoir }}</a>  </p>
+    <p class="card-text">Started: {{ run.started_at }} </p>
+    <p class="card-text">Ended: {{ run.ended_at }} </p>
+    <p class="card-text">Operator: {{ run.operator }} </p>
+    <p class="card-text">Sequencing Protocol: {{ run.sequencing_protocol }} </p>
+    <p class="card-text">Notes: {{ run.notes }} </p>
+    <p> Location: <a href="{% static run.path %}">{{ run.path }}</a> </p>
+  </div>
+</div>
+<br>
+<br>
+
+
+<form action="/test" method="post">
+    {% csrf_token %}
+    <label for="example">Generate triangle graph for runId: </label>
+    <input id="example" type="text" name="example" value="{{ run.id }}"><br>
+
+    {% with list='R365 G365 B365 R445 G445 B445 R525 G525 B525 R590 G590 B590 R645 G645 B645' %}
+    {% for channel in list.split %}
+        <input type="checkbox" id={{channel}} name={{channel}} value={{channel}}x checked>
+        <label for={{channel}}>{{channel}}&emsp;</label>
+                {% if forloop.counter|divisibleby:3 %}
+    <br>
+    {% endif %}
+
+    {% endfor %}
+    {% endwith %}
+
+  <label for="roiset">Choose a roiset:</label>
+  <select name="roiset" id="roiset">
+    <option value="RoiSet1.zip">RoiSet1.zip</option>
+    <option value="RoiSet2.zip">RoiSet2.zip</option>
+    <option value="RoiSet3.zip">RoiSet3.zip</option>
+    <option value="RoiSet4.zip">RoiSet4.zip</option>
+  </select>
+
+
+    <input type="submit" value="Generate">
+</form>
+
+<!--
+urls:    path('spot_details/<int:pk>', views.spot_details, name='report-detail'),
+
+<br>
+<h3>Reports:</h3><br>
+-->
+{% for report in run.report_set.all %}
+    <a href="{{ report.get_absolute_url }}">{{ report.name }}</a><br>
+{% endfor %}
+<br>
+<br>
+
+{% if raw_tif %}
+<h3>Raw:</h3><br>
+    <div>
+        <!-- 0 and 1 are tuple numbers -->
+        {% for img in raw_tif %}
+    <div style="float:left; width:400px; height:350px;">
+        {{img.0}}
+        <img src="{% static img.1 %}" class="img-thumbnail" alt="{% static img.1 %}">
+    </div>
+        {% endfor %}
+</div>
+{% else %}
+<!--
+    <p>Raw files not found.</p>
+-->
+{% endif %}
+
+{% if raw_thumbnails %}
+<h3>Thumbnails:</h3><br>
+    <div>
+        <!-- 0 and 1 are tuple numbers -->
+        {% for img in raw_thumbnails %}
+    <div style="float:left; width:400px; height:350px;">
+        {{img.0}}
+        <img src="{% static img.1 %}" class="img-thumbnail" alt="{% static img.1 %}">
+    </div>
+        {% endfor %}
+</div>
+{% else %}
+<!--
+    <p>Thumbnails not found.</p>
+-->
+{% endif %}
+
+
+{% autoescape off %}
+
+
+{% if simple_plot %}
+<div>
+    <h3>Spot intensities :</h3> <br>
+    {{ simple_plot }}
+</div>
+{% endif %}
+
+{% if triangle_plot %}
+<div>
+    <br>
+    <h3>Cycle 1, Spot intensities projected on 2-dimensional color channels.</h3> <br>
+    {{ triangle_plot }}
+</div>
+{% endif %}
+
+{% if spot_trajectories_plot %}
+<div>
+    <br>
+    <h3>Spot intensity trajectories. All cycles.</h3> <br>
+    {{ spot_trajectories_plot }}
+</div>
+{% endif %}
+
+{% endautoescape %}
+
+<h3>Analysis:</h3><br>
+{% if analysis_filenames %}
+    <div>
+        {% for img in analysis_filenames %}
+            {% if forloop.counter0|divisibleby:4 %}
+            <div class="row">
+            {% endif %}
+                <div style="float:left; width:400px; height:350px;">
+                {{img.0}}
+                <a href="{% static img.1 %}"><img src="{% static img.1 %}" class="img-thumbnail" alt="{% static img.1 %}"></a>
+                </div>
+            {% if forloop.counter|divisibleby:4 %}
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+{% else %}
+    <p>Analysis not found.</p>
+{% endif %}
+
+
+{% endblock %}
+

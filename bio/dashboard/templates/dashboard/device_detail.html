@@ -1,0 +1,40 @@
+
+
+{% extends "base.html" %}
+
+{% block content %}
+
+<br>
+  <h1>Device: {{ device.name }} </h1><br>
+
+  <h3>Associated runs:</h3><br>
+
+
+    <a href="{{ run.get_absolute_url }}">{{ run.name }}</a><br>
+
+
+    <table class="table table-striped table-hover">
+      <thead>
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">Date</th>
+          <th scope="col">Name</th>
+          <th scope="col">Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for run in device.run_set.all|dictsortreversed:"name" %}
+        <tr>
+          <th scope="row">{{run.id}}</th>
+          <td>{{ run.started_at }}</td>
+          <td><a href="{{ run.get_absolute_url }}"> {{ run.name }} </a></td>
+          <td>{{ run.notes }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+
+
+
+{% endblock %}
+

@@ -1,0 +1,52 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Reservoir List</h1>
+
+  {% if reservoir_list %}
+    <table class="table table-striped table-hover">
+      <thead>
+        <tr>
+<!--          <th scope="col">#</th> -->
+<!--          <th scope="col">Created_at</th> -->
+          <th scope="col">Serial Number</th>
+          <th scope="col">Vendor</th>
+          <th scope="col">Substrate</th>
+          <th scope="col">Cleaning</th>
+          <th scope="col">Coating</th>
+          <th scope="col">Functionalization</th>
+          <th scope="col">Library</th>
+          <th scope="col">Blocking</th>
+          <th scope="col">Run</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for reservoir in reservoir_list %}
+        <tr>
+<!--          <th scope="row">{{reservoir.id}}</th> -->
+<!--          <td>{{ reservoir.created_at }}</td> -->
+          <td>{{ reservoir.serial_number }}</td>
+          <td>{{ reservoir.vendor }}</td>
+          <td>{{ reservoir.substrate }}</td>
+          <td>{{ reservoir.cleaning }}</td>
+          <td>{{ reservoir.coating }}</td>
+          <td>{{ reservoir.functionalization }}</td>
+          <td>{{ reservoir.library }}</td>
+          <td>{{ reservoir.blocking }}</td>
+          <td>
+          {% for run in reservoir.run_set.all %}
+            <a href="{{ run.get_absolute_url }}">{{ run.name }},</a>
+          {% endfor %}
+          </td>
+
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>There are no reservoirs in the database.</p>
+  {% endif %}
+{% endblock %}
+
+
