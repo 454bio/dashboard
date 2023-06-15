@@ -8,5 +8,14 @@
 <a href="https://docs.google.com/spreadsheets/d/1Xnab1EE8xHKLXboeUNA82PFBL_ItH5wr/">Sequencing Runs</a><br>
 <a href="https://drive.google.com/drive/u/1/folders/1vG0Y19W8qCHMh8DiLIOgsDof1E8-jVHv">Onepot Protocols</a><br>
 
+{% if run_histogram %}
+{% autoescape off %}
+<div>
+    <h1>Weekly runs:</h1> <br>
+    {{ run_histogram }}
+</div>
+{% endautoescape %}
+{% endif %}
+
 
 {% endblock %}

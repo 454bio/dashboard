@@ -17,8 +17,42 @@ from scipy import ndimage
 import roifile
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import re
+from datetime import datetime, timedelta
+from django.utils import timezone
 
 data_root_path = "/static_root/InstrumentData"  # TODO, move to configuration
+
+
+def extract_datetime(subfolderstr: str) -> str | None:
+    """TODO timestamp needs to be provided in iso format instead of being extracted from folder name"""
+    match = re.search(r'^(20\d{2})(\d{2})(\d{2})_(\d{2})(\d{2})', subfolderstr)
+
+    if not match:
+        return None
+
+    # print(type(match))
+    # print(match.groups())
+    # print(match.group(0))
+
+    datetime_str = match.group(0)  # 20230612_1145
+    datetime_object = datetime.strptime(datetime_str, '%Y%m%d_%H%M')
+    # print(datetime_object) # 2023-06-12 11:45:00
+
+    aware_start_time = timezone.make_aware(datetime_object)  # aware
+
+    return aware_start_time
+
+
+def update_run_start_date():
+
+    runs = Run.objects.all()
+    for run in runs:
+        if not run.started_at:
+            d = extract_datetime(run.name)
+            if d:
+                run.started_at = d
+                run.save()
 
 
 def import_signup_sheet():
@@ -27,7 +61,6 @@ def import_signup_sheet():
     df = pd.read_csv(sequencing_file)
     # drop rows that are fully empty
     df.dropna(how="all", inplace=True)
-
 
     for index, row in df.iterrows():
         print(row)
@@ -138,11 +171,14 @@ def scan():
                     # run exists already
                     continue
 
+                # extract date from subfolder, TODO, should be in a json file, in ISO format
+                started_at = extract_datetime(subfolder)
 
                 r = Run(
                     name=run_directory,
                     device=Device.objects.get(name=dev.name),
                     path=subfolder.lstrip('/static_root'),
+                    started_at=started_at,
 #                    notes="test",
 #                    reservoir=Reservoir.objects.get(serial_number=366),
                 )
@@ -166,9 +202,12 @@ def home(request):
     devices = Device.objects.all()
 
     scan()
+#    update_run_start_date()
 #    import_reservoirs_from_csv()
     import_signup_sheet()
-    return render(request, 'home.html', {'devices': devices})
+
+    run_histogram = create_run_histogram()
+    return render(request, 'home.html', {'devices': devices, 'run_histogram': run_histogram})
 
 def test(request):
 
@@ -302,4 +341,29 @@ def create_simple_plot_go(df_: pd.DataFrame):
     return plot1
 
 
+def create_run_histogram():
+
+    df = pd.DataFrame(list(Run.objects.exclude(name__contains="QC|qc").values()))
+    df = df[~df.name.str.contains("QC|qc")]
+#    print(df["name"])
+
+    fig = go.Figure(
+        go.Histogram(
+            x=df['started_at'],
+            y=df['id'],
+            histnorm='',
+            histfunc='count',
+            autobinx=False,
+            xbins=dict(
+                start=datetime.now().date()-timedelta(days=100),
+                end=datetime.now().date(),
+                size='D'
+            )
+        )
+    )
+    fig.update_layout(bargap=0.1)
+    fig.show()
+
+    plot1 = plot(fig, output_type='div')
+    return plot1
 
