@@ -275,6 +275,13 @@ class RunDetailView(generic.DetailView):
         analysis_filenames = [(os.path.basename(f), f.replace('/static_root/', '')) for f in analysis_filenames]
         print("analysis_filenames: ", analysis_filenames)
 
+        color_transformed_spots_csv = os.path.join(run_dir, 'analysis', 'color_transformed_spots.csv')
+        if os.path.exists(color_transformed_spots_csv):
+            df = pd.read_csv(color_transformed_spots_csv)
+            fig = ziontools.plot_bars(df, '') # Title TODO
+            bar_plot = plot(fig, output_type='div')
+            context["bar_plot"] = bar_plot
+
         pixel_data_csv = os.path.join(run_dir, 'analysis', 'spot_pixel_data.csv')
         triangle_plot = create_spot_triangle_plot(pixel_data_csv) if os.path.exists(pixel_data_csv) else None
         context["triangle_plot"] = triangle_plot

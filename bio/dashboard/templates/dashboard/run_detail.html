@@ -101,6 +101,12 @@ urls:    path('spot_details/<int:pk>', views.spot_details, name='report-detail')
 
 {% autoescape off %}
 
+{% if bar_plot %}
+<div>
+    <h3>Bar plot :</h3> <br>
+    {{ bar_plot }}
+</div>
+{% endif %}
 
 {% if simple_plot %}
 <div>
