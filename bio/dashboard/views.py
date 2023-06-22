@@ -21,8 +21,10 @@ import re
 from datetime import datetime, timedelta
 from django.utils import timezone
 
-data_root_path = "/static_root/InstrumentData"  # TODO, move to configuration
-
+# TODO, move to configuration
+data_root_path = "/static_root/InstrumentData"
+sequencing_file = '/tmp/Sequencing.csv'
+reservoir_file = '/tmp/Reservoir_Inventory.csv'
 
 def extract_datetime(subfolderstr: str) -> str | None:
     """TODO timestamp needs to be provided in iso format instead of being extracted from folder name"""
@@ -56,8 +58,11 @@ def update_run_start_date():
 
 
 def import_signup_sheet():
-    sequencing_file = '/home/domibel/454_Bio/2023_06_09_Sequencing.csv' # TODO
-    import pandas as pd
+
+    if not os.path.exists(sequencing_file):
+        print(f"{sequencing_file} not found")
+        return
+
     df = pd.read_csv(sequencing_file)
     # drop rows that are fully empty
     df.dropna(how="all", inplace=True)
@@ -93,9 +98,9 @@ def import_signup_sheet():
 
 def import_reservoirs_from_csv():
 
-    reservoir_file = '/home/domibel/454_Bio/2023_06_09_Reservoir_Inventory.csv' # TODO
-
-    import pandas as pd
+    if not os.path.exists(reservoir_file):
+        print(f"{reservoir_file} not found")
+        return
 
     df = pd.read_csv(reservoir_file)
 
@@ -123,24 +128,24 @@ def import_reservoirs_from_csv():
     for index, row in df.iterrows():
         print(row)
 
-        reservoir_sn = int(row['ID'].lstrip('R'))
+        reservoir_sn = int(row['ID'])
 
         if Reservoir.objects.filter(serial_number=reservoir_sn).exists():
             # run exists already
             continue
 
-
         r = Reservoir(
             serial_number=reservoir_sn,
             vendor=row['Slide Vendor'],
             substrate=row['Substrate'],
-            cleaning = row['Cleaning'],
-            coating = row['Coating'],
-            functionalization = row['Functionalization'],
-            library = row['SpotLayout#']
-#            blocking = models.CharField(max_length=200)
+            cleaning=row['Cleaning'],
+            coating=row['Coating'],
+            functionalization=row['Functionalization'],
+            library=row['SpotLayout#']
+#            blocking=models.CharField(max_length=200)
         )
         r.save()
+
 
 def scan():
 
@@ -182,6 +187,7 @@ def scan():
 #                    notes="test",
 #                    reservoir=Reservoir.objects.get(serial_number=366),
                 )
+                print(f"Create new run {r}")
                 r.save()
 
     '''
