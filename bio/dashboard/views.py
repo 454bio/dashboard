@@ -135,17 +135,14 @@ def import_reservoirs_from_csv():
         assembly_date = None
 #        print(f"date: {row['Assembly Date']} type: {type(row['Assembly Date'])}")
         if isinstance(row['Assembly Date'], float):
-            print(f"skip assembly_date, float: {row['Assembly Date']}")
+            print(f"skip reservoir {reservoir_sn}, assembly_date is float: {row['Assembly Date']}")
         else:
             assembly_date = dateutil.parser.parse(row['Assembly Date'])
 
-        '''
-        # update if reservoir exists already
-        if Reservoir.objects.filter(serial_number=reservoir_sn).exists():
-            reservoirs = Reservoir.objects.filter(serial_number=reservoir_sn)
-            reservoirs.update(assembly_date=date)
+        reservoirs = Reservoir.objects.filter(serial_number=reservoir_sn)
+        if reservoirs.exists():
+#            reservoirs.update(assembly_date=assembly_date)
             continue
-        '''
 
         r = Reservoir(
             assembly_date=assembly_date,
