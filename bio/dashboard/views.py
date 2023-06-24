@@ -20,6 +20,7 @@ from plotly.subplots import make_subplots
 import re
 from datetime import datetime, timedelta
 from django.utils import timezone
+import dateutil.parser
 
 # TODO, move to configuration
 data_root_path = "/static_root/InstrumentData"
@@ -31,6 +32,7 @@ def extract_datetime(subfolderstr: str) -> str | None:
     match = re.search(r'^(20\d{2})(\d{2})(\d{2})_(\d{2})(\d{2})', subfolderstr)
 
     if not match:
+        print(f'unable to extract datetime from {subfolderstr}')
         return None
 
     # print(type(match))
@@ -123,18 +125,30 @@ def import_reservoirs_from_csv():
     functionalization = models.CharField(max_length=200)
     library = models.CharField(max_length=200)
     blocking = models.CharField(max_length=200)
-
     '''
+
     for index, row in df.iterrows():
         print(row)
 
         reservoir_sn = int(row['ID'])
 
+        assembly_date = None
+#        print(f"date: {row['Assembly Date']} type: {type(row['Assembly Date'])}")
+        if isinstance(row['Assembly Date'], float):
+            print(f"skip assembly_date, float: {row['Assembly Date']}")
+        else:
+            assembly_date = dateutil.parser.parse(row['Assembly Date'])
+
+        '''
+        # update if reservoir exists already
         if Reservoir.objects.filter(serial_number=reservoir_sn).exists():
-            # run exists already
+            reservoirs = Reservoir.objects.filter(serial_number=reservoir_sn)
+            reservoirs.update(assembly_date=date)
             continue
+        '''
 
         r = Reservoir(
+            assembly_date=assembly_date,
             serial_number=reservoir_sn,
             vendor=row['Slide Vendor'],
             substrate=row['Substrate'],
@@ -300,7 +314,7 @@ class RunDetailView(generic.DetailView):
             spot_trajectories_plot = plot(fig, output_type='div')
             context["spot_trajectories_plot"] = spot_trajectories_plot
 
-            print("create run comprison")
+            print("create run comparison")
             fig = ziontools.plot_roiset_run_comparison(
                 [metrics_data_csv]
             )

@@ -20,6 +20,7 @@ class Device(models.Model):
 
 class Reservoir(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
+    assembly_date = models.DateField(null=True, blank=True)
     serial_number = models.IntegerField(null=False, unique=True)
     vendor = models.CharField(max_length=200)
     substrate = models.CharField(max_length=200)
