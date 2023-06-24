@@ -177,7 +177,7 @@ def scan():
                     continue
 
                 # extract date from subfolder, TODO, should be in a json file, in ISO format
-                started_at = extract_datetime(subfolder)
+                started_at = extract_datetime(run_directory)
 
                 r = Run(
                     name=run_directory,
