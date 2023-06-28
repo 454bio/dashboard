@@ -228,7 +228,11 @@ def home(request):
 
 def test(request):
 
+    from .tasks import run_pixel_extraction
 
+#    r = Run.objects.get(id=run_id)
+
+    run_pixel_extraction.delay("some run info id ...")
 
     return render(request, 'test.html', {'req': request, 'post': request.POST})
 

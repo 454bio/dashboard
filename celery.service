@@ -6,8 +6,8 @@ After=network.target
 Type=forking
 User=celery
 Group=celery
-EnvironmentFile=/etc/conf.d/celery
-WorkingDirectory=/opt/celery
+EnvironmentFile=/etc/default/celery
+WorkingDirectory=/home/domibel/454_Bio/dashboard/bio/
 ExecStart=/bin/sh -c '${CELERY_BIN} -A $CELERY_APP multi start $CELERYD_NODES \
     --pidfile=${CELERYD_PID_FILE} --logfile=${CELERYD_LOG_FILE} \
     --loglevel="${CELERYD_LOG_LEVEL}" $CELERYD_OPTS'
