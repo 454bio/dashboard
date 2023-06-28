@@ -2,23 +2,23 @@
   <div class="container-fluid">
       {% load static %}
       <img src="{% static '454biologo.svg' %}" alt="454 logo" style="width:100px;height:100px;" />
-    <a class="navbar-brand" href="{% url 'home' %}">454 Bio</a>
+    <a class="navbar-brand" href="{% url 'dashboard:home' %}">454 Bio</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav me-auto mb-3 mb-lg-0">
         <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="{% url 'devices' %}">Devices</a>
+          <a class="nav-link active" aria-current="page" href="{% url 'dashboard:devices' %}">Devices</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'runs' %}">Runs</a>
+          <a class="nav-link" href="{% url 'dashboard:runs' %}">Runs</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'reports' %}">Reports</a>
+          <a class="nav-link" href="{% url 'dashboard:reports' %}">Reports</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'reservoirs' %}">Reservoirs</a>
+          <a class="nav-link" href="{% url 'dashboard:reservoirs' %}">Reservoirs</a>
         </li>
         <!--
         <li class="nav-item dropdown">

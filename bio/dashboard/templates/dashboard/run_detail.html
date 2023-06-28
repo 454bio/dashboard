@@ -11,7 +11,7 @@
   </div>
   <div class="card-body">
     <h5 class="card-title">Device: <a href="{{ run.device.get_absolute_url }}">{{ run.device.name }}</a></h5>
-    <p class="card-text">Reservoir: <a href="{% url 'reservoirs' %}">{{ run.reservoir }}</a>  </p>
+    <p class="card-text">Reservoir: <a href="{% url 'dashboard:reservoirs' %}">{{ run.reservoir }}</a>  </p>
     <p class="card-text">Started: {{ run.started_at }} </p>
     <p class="card-text">Ended: {{ run.ended_at }} </p>
     <p class="card-text">Operator: {{ run.operator }} </p>

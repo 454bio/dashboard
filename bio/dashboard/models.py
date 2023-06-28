@@ -12,7 +12,7 @@ class Device(models.Model):
     tempsensor = models.CharField(max_length=40, null=True, blank=True)
 
     def get_absolute_url(self):
-        return reverse('device-detail', args=[str(self.id)])
+        return reverse('dashboard:device-detail', args=[str(self.id)])
 
     def __str__(self):
         return self.name + " " + self.serial_number
@@ -31,7 +31,7 @@ class Reservoir(models.Model):
     blocking = models.CharField(max_length=200)
 
     def get_absolute_url(self):
-        return reverse('reservoir-detail', args=[str(self.id)])
+        return reverse('dashboard:reservoir-detail', args=[str(self.id)])
 
     def __str__(self):
         return str(f"{self.serial_number} {self.substrate} {self.functionalization} {self.library}")
@@ -50,7 +50,7 @@ class Run(models.Model):
     reservoir = models.ForeignKey(Reservoir, null=True, blank=True, on_delete=models.SET_NULL)
 
     def get_absolute_url(self):
-        return reverse('run-detail', args=[str(self.id)])
+        return reverse('dashboard:run-detail', args=[str(self.id)])
 
     def __str__(self):
         return self.name
@@ -64,7 +64,7 @@ class Report(models.Model):
     path = models.CharField(max_length=200, null=True)
 
     def get_absolute_url(self):
-        return reverse('report-detail', args=[str(self.id)])
+        return reverse('dashboard:report-detail', args=[str(self.id)])
 
     def __str__(self):
         return self.name

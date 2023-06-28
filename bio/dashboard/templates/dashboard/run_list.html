@@ -25,7 +25,7 @@
           <td>{{ run.started_at }}</td>
           <td><a href="{{ run.get_absolute_url }}"> {{ run.name }} </a></td>
           <td>{{ run.device.name }}</td>
-          <td><a href="{% url 'reservoirs' %}">{{ run.reservoir }}</a></td>
+          <td><a href="{% url 'dashboard:reservoirs' %}">{{ run.reservoir }}</a></td>
           <td>{{ run.operator }}</td>
           <td>{{ run.sequencing_protocol }}</td>
           <td>{{ run.notes }}</td>
