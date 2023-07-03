@@ -1,22 +1,103 @@
 {% extends "base.html" %}
-
+{% load tz %}
 {% block content %}
-
-Created: {{ report.created_at }}  <br>
-
-  <h1>Title: {{ report.name }} </h1><br>
-
-Device:        <a href="{{ report.run.device.get_absolute_url }}">{{ report.run.device.name }}</a>  <br>
-Run:        <a href="{{ report.run.get_absolute_url }}">{{ report.run.name }}</a>  </h1><br>
+    {% load static %}
 
 
-Location: {{ report.path }} <br>
+
+<h1>Report: {{ report.name }} </h1><br>
+{% get_current_timezone as TIME_ZONE %}
+<h3>Created: {{ report.created_at }}  </h3>{{ TIME_ZONE }}<br>
+
+<br>
+<br>
+Device:     <a href="{{ report.run.device.get_absolute_url }}">{{ report.run.device.name }}</a>  <br>
+Run:        <a href="{{ report.run.get_absolute_url }}">{{ report.run.name }}</a>  <br>
+Location:   <a href="{% static report.path %}">{{ report.path }}</a>  <br>
+
+
+<br>
+<!--
+<h2>Test: Create triangle plot, in development</h2><br>
+<form action="{% url 'dashboard:test' report.run.id %}" method="post">
+    {% csrf_token %}
+    <label for="example">Generate triangle graph for runId: </label>
+    <input id="example" type="text" name="example" value="{{ report.run.id }}"><br>
+
+    {% with list='R365 G365 B365 R445 G445 B445 R525 G525 B525 R590 G590 B590 R645 G645 B645' %}
+    {% for channel in list.split %}
+        <input type="checkbox" id={{channel}} name={{channel}} value={{channel}}x checked>
+        <label for={{channel}}>{{channel}}&emsp;</label>
+                {% if forloop.counter|divisibleby:3 %}
+    <br>
+    {% endif %}
+
+    {% endfor %}
+    {% endwith %}
+
+  <label for="roiset">Choose a roiset:</label>
+  <select name="roiset" id="roiset">
+    <option value="RoiSet1.zip">RoiSet1.zip</option>
+    <option value="RoiSet2.zip">RoiSet2.zip</option>
+    <option value="RoiSet3.zip">RoiSet3.zip</option>
+    <option value="RoiSet4.zip">RoiSet4.zip</option>
+  </select>
+
+
+    <input type="submit" value="Generate">
+</form>
+-->
 
 <br>
 <br>
 <br>
-TODO: show Jose's images, graphs etc here ...
+{% autoescape off %}
 
+{% if not basecalls.empty %}
+<div>
+    <h3>basecalls :</h3> <br>
+    {{ basecalls|safe }}
+</div>
+{% endif %}
+
+{% if bar_plot %}
+<div>
+    <h3>Bar plot :</h3> <br>
+    {{ bar_plot }}
+</div>
+{% endif %}
+
+{% if df_metrics %}
+<div>
+    <h3>Metrics table :</h3> <br>
+    {{ df_metrics }}
+</div>
+{% endif %}
+
+{% if simple_plot %}
+<div>
+    <h3>Spot intensities :</h3> <br>
+    {{ simple_plot }}
+</div>
+{% endif %}
+
+{% if triangle_plot %}
+<div>
+    <br>
+    <h3>Cycle 1, Spot intensities projected on 2-dimensional color channels.</h3> <br>
+    {{ triangle_plot }}
+</div>
+{% endif %}
+
+{% if spot_trajectories_plot %}
+<div>
+    <br>
+    <h3>Spot intensity trajectories. All cycles.</h3> <br>
+    {{ spot_trajectories_plot }}
+</div>
+{% endif %}
+
+{% endautoescape %}
 
 {% endblock %}
 

@@ -24,40 +24,17 @@
 <br>
 
 
-<form action="/test" method="post">
+<h3>Create new report:</h3><br>
+<form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    <label for="example">Generate triangle graph for runId: </label>
-    <input id="example" type="text" name="example" value="{{ run.id }}"><br>
+    {{ form.as_p }}
 
-    {% with list='R365 G365 B365 R445 G445 B445 R525 G525 B525 R590 G590 B590 R645 G645 B645' %}
-    {% for channel in list.split %}
-        <input type="checkbox" id={{channel}} name={{channel}} value={{channel}}x checked>
-        <label for={{channel}}>{{channel}}&emsp;</label>
-                {% if forloop.counter|divisibleby:3 %}
-    <br>
-    {% endif %}
-
-    {% endfor %}
-    {% endwith %}
-
-  <label for="roiset">Choose a roiset:</label>
-  <select name="roiset" id="roiset">
-    <option value="RoiSet1.zip">RoiSet1.zip</option>
-    <option value="RoiSet2.zip">RoiSet2.zip</option>
-    <option value="RoiSet3.zip">RoiSet3.zip</option>
-    <option value="RoiSet4.zip">RoiSet4.zip</option>
-  </select>
-
-
-    <input type="submit" value="Generate">
+    <input type="submit" value="Submit">
 </form>
 
-<!--
-urls:    path('spot_details/<int:pk>', views.spot_details, name='report-detail'),
 
 <br>
 <h3>Reports:</h3><br>
--->
 {% for report in run.report_set.all %}
     <a href="{{ report.get_absolute_url }}">{{ report.name }}</a><br>
 {% endfor %}
@@ -99,39 +76,7 @@ urls:    path('spot_details/<int:pk>', views.spot_details, name='report-detail')
 {% endif %}
 
 
-{% autoescape off %}
 
-{% if bar_plot %}
-<div>
-    <h3>Bar plot :</h3> <br>
-    {{ bar_plot }}
-</div>
-{% endif %}
-
-{% if simple_plot %}
-<div>
-    <h3>Spot intensities :</h3> <br>
-    {{ simple_plot }}
-</div>
-{% endif %}
-
-{% if triangle_plot %}
-<div>
-    <br>
-    <h3>Cycle 1, Spot intensities projected on 2-dimensional color channels.</h3> <br>
-    {{ triangle_plot }}
-</div>
-{% endif %}
-
-{% if spot_trajectories_plot %}
-<div>
-    <br>
-    <h3>Spot intensity trajectories. All cycles.</h3> <br>
-    {{ spot_trajectories_plot }}
-</div>
-{% endif %}
-
-{% endautoescape %}
 
 <h3>Analysis:</h3><br>
 {% if analysis_filenames %}

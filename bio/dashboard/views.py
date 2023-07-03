@@ -21,6 +21,11 @@ import re
 from datetime import datetime, timedelta
 from django.utils import timezone
 import dateutil.parser
+from .tasks import run_pixel_extraction, mul
+from .forms import RoiSetForm
+
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 
 # TODO, move to configuration
 data_root_path = "/static_root/InstrumentData"
@@ -226,16 +231,40 @@ def home(request):
     run_histogram = create_run_histogram()
     return render(request, 'home.html', {'devices': devices, 'run_histogram': run_histogram})
 
-def test(request):
+def test(request, run_id):
 
-    from .tasks import run_pixel_extraction
-
-#    r = Run.objects.get(id=run_id)
+    r = Run.objects.get(id=run_id)
+    print(f"Run: {r}")
 
     run_pixel_extraction.delay("some run info id ...")
 
     return render(request, 'test.html', {'req': request, 'post': request.POST})
 
+def test2(request, run_id):
+
+    r = Run.objects.get(id=run_id)
+    print(f"Run: {r}")
+
+    run_pixel_extraction.delay("some run info id ...")
+
+    return render(request, 'test.html', {'req': request, 'post': request.POST})
+
+'''
+from django import forms
+class FormsBasics(View):
+    def get(selfself, request):
+        form = RoiSetForm()
+        context = {
+            'form': form
+        }
+        return render(request, 'test.html', context)
+    def post(selfself, request):
+        form = RoiSetForm(request.POST)
+        context = {
+            'form': form
+        }
+        return render(request, 'test.html', context)
+'''
 class DeviceListView(generic.ListView):
     model = Device
 
@@ -259,8 +288,83 @@ class RunDetailView(generic.DetailView):
 
     # override context data
     def get_context_data(self, *args, **kwargs):
-        context = super(RunDetailView,
-                        self).get_context_data(*args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
+        context["form"] = RoiSetForm
+        return context
+
+    def post(self, request, *args, **kwargs):
+        form = RoiSetForm(request.POST, request.FILES)
+        print("received post -------------------------")
+        print(kwargs)
+        print(request.POST)
+        print(request.FILES)
+
+        run = Run.objects.get(pk=kwargs['pk'])
+        print(f"post received from {run.id}")
+
+        if form.is_valid():
+            print("is valid  -------------------------")
+            self.object = self.get_object()
+
+            '''
+                created_at = models.DateTimeField(auto_now_add=True)
+                name = models.CharField(max_length=200)
+                run = models.ForeignKey(Run, null=True, blank=True, on_delete=models.SET_NULL)
+                path = models.CharField(max_length=200, null=True)
+            
+            '''
+
+            report = Report(
+                name=request.POST['title'],
+                run=Run.objects.get(pk=kwargs['pk'])
+            )
+            report.save()
+
+            print(f"report {report.pk} created =====================================")
+
+            # create report directory
+            try:
+                mode = 0o777
+                report_rel_path = "reports/" + str(report.pk)
+                report_full_path = os.path.join("/static_root", report_rel_path)
+                os.mkdir(report_full_path)
+                os.chmod(report_full_path, mode)
+            except OSError as error:
+                print(error)
+
+            report.path = report_rel_path
+            report.save()
+
+            print(request.FILES["file"])
+            file1 = request.FILES['file']
+            contentOfFile = file1.read()
+#            print(contentOfFile)
+            # permission issues? writes as www-data
+            roisetzipfile = os.path.join(report_full_path, "roiset.zip")
+            with open(roisetzipfile, "wb") as text_file:
+                text_file.write(contentOfFile)
+
+            # start celery task
+            print(f"Run: {run.name} {run.id} {run.path}")
+            run_full_path = os.path.join("/static_root", run.path, "raws")
+
+            #            a = run_pixel_extraction.delay("/home/domibel/454_Bio/runs/20230527_1548_S0140_0001_OnePot10Cycles/raws", report_full_path, "roiset.zip")
+            a = run_pixel_extraction.delay(run_full_path, report_full_path, "roiset.zip")
+
+#            a.get()
+
+            # context = super().get_context_data(**kwargs)
+            # context['form'] = RoiSetForm
+            return HttpResponseRedirect(reverse('dashboard:report-detail', args=[report.pk]))
+
+        else:
+            print("is not valid -------------------------")
+            self.object = self.get_object()
+            context = super().get_context_data(**kwargs)
+            context['form'] = form
+            return self.render_to_response(context=context)
+
+    '''
 
         run = self.get_object()
 
@@ -292,28 +396,49 @@ class RunDetailView(generic.DetailView):
         # simple_plot = create_simple_plot_go(df)
         # context["simple_plot"] = simple_plot
 
-        analysis_filenames = sorted(glob.glob(run_dir + "/analysis/*.png", recursive=False))
+
+        # add extra field
+        context["raw_thumbnails"] = file_names
+
+
+#        context["raw_tif"] = tif_file_names
+        return context
+    '''
+
+class ReportDetailView(generic.DetailView):
+    model = Report
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+
+        report = self.get_object()
+        report_full_path = os.path.join("/static_root", report.path)
+
+        analysis_filenames = sorted(glob.glob(report_full_path + "/*.png", recursive=False))
         analysis_filenames = [(os.path.basename(f), f.replace('/static_root/', '')) for f in analysis_filenames]
         print("analysis_filenames: ", analysis_filenames)
 
-        color_transformed_spots_csv = os.path.join(run_dir, 'analysis', 'color_transformed_spots.csv')
+        color_transformed_spots_csv = os.path.join(report_full_path, 'color_transformed_spots.csv')
         if os.path.exists(color_transformed_spots_csv):
             df = pd.read_csv(color_transformed_spots_csv)
             fig = ziontools.plot_bars(df, '') # Title TODO
             bar_plot = plot(fig, output_type='div')
             context["bar_plot"] = bar_plot
+            context["basecalls"] = df.to_html()
 
-        pixel_data_csv = os.path.join(run_dir, 'analysis', 'spot_pixel_data.csv')
+        pixel_data_csv = os.path.join(report_full_path, 'spot_pixel_data.csv')
         triangle_plot = create_spot_triangle_plot(pixel_data_csv) if os.path.exists(pixel_data_csv) else None
         context["triangle_plot"] = triangle_plot
 
-        metrics_data_csv = os.path.join(run_dir, 'analysis', 'metrics.csv')
+        metrics_data_csv = os.path.join(report_full_path, 'metrics.csv')
         if os.path.exists(metrics_data_csv):
             fig = ziontools.plot_spot_trajectories(
                 metrics_data_csv, ['R365', 'G365', 'B365', 'R445'], ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
             )
             spot_trajectories_plot = plot(fig, output_type='div')
             context["spot_trajectories_plot"] = spot_trajectories_plot
+
+            context["df_metrics"] = pd.read_csv(pixel_data_csv).to_html()
 
             print("create run comparison")
             fig = ziontools.plot_roiset_run_comparison(
@@ -322,17 +447,10 @@ class RunDetailView(generic.DetailView):
             simple_plot = plot(fig, output_type='div')
             context["simple_plot"] = simple_plot
 
-        # add extra field
-        context["raw_thumbnails"] = file_names
         context["analysis_filenames"] = analysis_filenames
 
 
-#        context["raw_tif"] = tif_file_names
         return context
-
-class ReportDetailView(generic.DetailView):
-    model = Report
-
 
 def create_spot_triangle_plot(pixel_data_csv: str):
 
