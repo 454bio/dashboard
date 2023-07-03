@@ -91,16 +91,17 @@ def import_signup_sheet():
             runs.update(notes=row['Description'])
             runs.update(operator=row['Scientist'])
             runs.update(sequencing_protocol=row['Seq Ctrl Program'])
-            print(type(row['Reservoir']), row['Reservoir'])
-            reservoir_sn = int(row['Reservoir'].lstrip('R').rstrip(' (used)').rstrip('?'))
-            print(type(reservoir_sn), reservoir_sn)
-
-            print('get object')
+            match = re.search("^R(\d{1,4})$", str(row['Reservoir']))
+            if match:
+                reservoir_sn = int(match.group(1))
+            else:
+                print(f"skip {row['Reservoir']}")
+                continue
             reservoir = Reservoir.objects.filter(serial_number=reservoir_sn)
             print('received object', reservoir)
             if reservoir:
                 print('run update')
-                runs.update(reservoir=reservoir[0]) # TODO, make sure it is unique
+                runs.update(reservoir=reservoir[0])  # TODO, make sure it is unique
 
 
 def import_reservoirs_from_csv():
