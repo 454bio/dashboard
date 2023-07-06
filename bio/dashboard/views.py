@@ -425,6 +425,10 @@ class ReportDetailView(generic.DetailView):
             fig = ziontools.plot_bars(df, '') # Title TODO
             bar_plot = plot(fig, output_type='div')
             context["bar_plot"] = bar_plot
+
+        basecalls_csv = os.path.join(report_full_path, 'basecalls.csv')
+        if os.path.exists(basecalls_csv):
+            df = pd.read_csv(basecalls_csv)
             context["basecalls"] = df.to_html()
 
         pixel_data_csv = os.path.join(report_full_path, 'spot_pixel_data.csv')
