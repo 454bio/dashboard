@@ -428,8 +428,11 @@ class ReportDetailView(generic.DetailView):
 
         basecalls_csv = os.path.join(report_full_path, 'basecalls.csv')
         if os.path.exists(basecalls_csv):
-            df = pd.read_csv(basecalls_csv)
-            context["basecalls"] = df.to_html()
+            try:
+                df = pd.read_csv(basecalls_csv)
+                context["basecalls"] = df.to_html()
+            except pd.errors.EmptyDataError:
+                print(f"ERROR parsing {basecalls_csv}")
 
         pixel_data_csv = os.path.join(report_full_path, 'spot_pixel_data.csv')
         triangle_plot = create_spot_triangle_plot(pixel_data_csv) if os.path.exists(pixel_data_csv) else None
