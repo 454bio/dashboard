@@ -99,6 +99,29 @@ Location:   <a href="{% static report.path %}">{{ report.path }}</a>  <br>
 
 {% endautoescape %}
 
+
+<h3>Analysis:</h3><br>
+{% if analysis_filenames %}
+    <div>
+        {% for img in analysis_filenames %}
+            {% if forloop.counter0|divisibleby:4 %}
+            <div class="row">
+            {% endif %}
+                <div style="float:left; width:400px; height:350px;">
+                {{img.0}}
+                <a href="{% static img.1 %}"><img src="{% static img.1 %}" class="img-thumbnail" alt="{% static img.1 %}"></a>
+                </div>
+            {% if forloop.counter|divisibleby:4 %}
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+{% else %}
+    <p>Analysis not found.</p>
+{% endif %}
+
+
+
 {% endblock %}
 
 
