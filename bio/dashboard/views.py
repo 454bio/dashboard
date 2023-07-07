@@ -275,6 +275,7 @@ class RunListView(generic.ListView):
 
 class ReportListView(generic.ListView):
     model = Report
+    ordering = ['-created_at']
 
 class ReservoirListView(generic.ListView):
     model = Reservoir
