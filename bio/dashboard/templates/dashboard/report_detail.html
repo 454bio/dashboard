@@ -60,6 +60,13 @@ Location:   <a href="{% static report.path %}">{{ report.path }}</a>  <br>
 </div>
 {% endif %}
 
+{% if not read_length_histogram.empty %}
+<div>
+    <h3>Read-length histogram of perfect reads</h3> <br>
+    {{ read_length_histogram }}
+</div>
+{% endif %}
+
 {% if bar_plot %}
 <div>
     <h3>Bar plots :</h3> <br>

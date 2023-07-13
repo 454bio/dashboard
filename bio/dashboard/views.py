@@ -431,7 +431,9 @@ class ReportDetailView(generic.DetailView):
         if os.path.exists(basecalls_csv):
             try:
                 df = pd.read_csv(basecalls_csv)
-                context["basecalls"] = df.to_html()
+                df = df.dropna()
+                context["basecalls"] = df.to_html(classes='table table-stripped')
+                context["read_length_histogram"] = create_read_length_histogram(df)
             except pd.errors.EmptyDataError:
                 print(f"ERROR parsing {basecalls_csv}")
 
@@ -522,3 +524,24 @@ def create_run_histogram():
     plot1 = plot(fig, output_type='div')
     return plot1
 
+def create_read_length_histogram(df_: pd.DataFrame):
+
+    fig = go.Figure()
+    fig.add_trace(go.Histogram(x=df_['length_perfect_max_intensity'], name='max_intensity', xbins_size=1))
+    fig.add_trace(go.Histogram(x=df_['length_perfect_phase_corrected'], name='phase_corrected', xbins_size=1))
+
+    # Overlay both histograms
+    fig.update_layout(
+        barmode='overlay',
+        title_text='Read-length histogram of perfect reads',  # title of plot
+        xaxis_title_text='Read length',  # xaxis label
+        yaxis_title_text='Count',  # yaxis label
+        bargap=0.2,  # gap between bars of adjacent location coordinates
+        bargroupgap=0.1  # gap between bars of the same location coordinates
+    )
+
+    # Reduce opacity to see both histograms
+    fig.update_traces(opacity=0.75)
+    fig.show()
+    plot1 = plot(fig, output_type='div')
+    return plot1
