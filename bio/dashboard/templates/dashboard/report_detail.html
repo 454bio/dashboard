@@ -67,6 +67,13 @@ Location:   <a href="{% static report.path %}">{{ report.path }}</a>  <br>
 </div>
 {% endif %}
 
+{% if not quality_score_graph.empty %}
+<div>
+    <h3>Quality scores</h3> <br>
+    {{ quality_score_graph }}
+</div>
+{% endif %}
+
 {% if bar_plot %}
 <div>
     <h3>Bar plots :</h3> <br>

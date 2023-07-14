@@ -434,6 +434,7 @@ class ReportDetailView(generic.DetailView):
                 df = df.dropna()
                 context["basecalls"] = df.to_html(classes='table table-stripped')
                 context["read_length_histogram"] = create_read_length_histogram(df)
+                context["quality_score_graph"] = create_quality_score_graph(df)
             except pd.errors.EmptyDataError:
                 print(f"ERROR parsing {basecalls_csv}")
 
@@ -542,6 +543,70 @@ def create_read_length_histogram(df_: pd.DataFrame):
 
     # Reduce opacity to see both histograms
     fig.update_traces(opacity=0.75)
+    fig.show()
+    plot1 = plot(fig, output_type='div')
+    return plot1
+
+def create_quality_score_graph(df: pd.DataFrame):
+
+    import math
+    result_df = df[df['expected_read'].notna()]
+    print(result_df)
+    print(result_df['cycles'])
+    numCycles = result_df['cycles'][5]
+    numSpots = len(result_df)
+    quality_df = pd.DataFrame(columns=['cycle', 'Q_color_transform', 'Q_dephased'])
+    for cycle in range(numCycles):
+        p_color_transform = 0
+        p_dephased = 0
+        Q_color_transform = 0
+        Q_dephased = 0
+        for index, spot_row in result_df.iterrows():
+            curr_color_transform_basecall = spot_row['max_intensity_read'][:(cycle + 1)]
+            curr_dephased_basecall = spot_row['phase_corrected_read'][:(cycle + 1)]
+            curr_truth_basecall = spot_row['expected_read'][:(cycle + 1)]
+
+            print("index:", index, curr_truth_basecall, curr_color_transform_basecall, curr_dephased_basecall)
+
+            p_color_transform += sum(char1 != char2 for char1, char2 in zip(curr_color_transform_basecall, curr_truth_basecall))
+            p_dephased += sum(char1 != char2 for char1, char2 in zip(curr_dephased_basecall, curr_truth_basecall))
+
+        p_color_transform = p_color_transform / ((cycle + 1) * numSpots)
+        p_dephased = p_dephased / ((cycle + 1) * numSpots)
+
+        if p_color_transform == 0:
+            p_color_transform = 0.01
+        if p_dephased == 0:
+            p_dephased = 0.01
+        print(p_color_transform, p_dephased)
+
+        Q_color_transform = -10 * math.log10(p_color_transform)
+        Q_dephased = -10 * math.log10(p_dephased)
+        quality_df.at[cycle, 'p_dephased'] = p_dephased
+        quality_df.at[cycle, 'p_color_transform'] = p_color_transform
+        quality_df.at[cycle, 'cycle'] = cycle + 1
+        quality_df.at[cycle, 'Q_color_transform'] = Q_color_transform
+        quality_df.at[cycle, 'Q_dephased'] = Q_dephased
+
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+    fig.add_trace(
+        go.Scatter(x=quality_df['cycle'], y=quality_df['Q_color_transform'], name="Q color transform"),
+        secondary_y=False,
+    )
+    fig.add_trace(
+        go.Scatter(x=quality_df['cycle'], y=quality_df['Q_dephased'], name="Q phase corrected"),
+        secondary_y=False,
+    )
+    fig.add_trace(
+        go.Scatter(x=quality_df['cycle'], y=quality_df['p_color_transform']), name="p color transform",
+        secondary_y=True,
+    )
+    fig.add_trace(
+        go.Scatter(x=quality_df['cycle'], y=quality_df['p_dephased'], name="p phase corrected"),
+        secondary_y=True,
+    )
+
     fig.show()
     plot1 = plot(fig, output_type='div')
     return plot1
