@@ -10,6 +10,7 @@ import plotly.graph_objects as go
 import numpy as np
 import os
 import glob
+import math
 import ziontools
 from sklearn import linear_model
 import cv2 as cv
@@ -431,6 +432,7 @@ class ReportDetailView(generic.DetailView):
         if os.path.exists(basecalls_csv):
             try:
                 df = pd.read_csv(basecalls_csv)
+                print(df)
                 df = df.dropna()
                 context["basecalls"] = df.to_html(classes='table table-stripped')
                 context["read_length_histogram"] = create_read_length_histogram(df)
@@ -527,6 +529,9 @@ def create_run_histogram():
 
 def create_read_length_histogram(df_: pd.DataFrame):
 
+    if not {'length_perfect_max_intensity', 'length_perfect_phase_corrected'}.issubset(df_.columns):
+        return None
+
     fig = go.Figure()
     fig.add_trace(go.Histogram(x=df_['length_perfect_max_intensity'], name='max_intensity', xbins_size=1))
     fig.add_trace(go.Histogram(x=df_['length_perfect_phase_corrected'], name='phase_corrected', xbins_size=1))
@@ -542,25 +547,26 @@ def create_read_length_histogram(df_: pd.DataFrame):
     )
 
     # Reduce opacity to see both histograms
-    fig.update_traces(opacity=0.75)
+    fig.update_traces(opacity=0.40)
     fig.show()
     plot1 = plot(fig, output_type='div')
     return plot1
 
 def create_quality_score_graph(df: pd.DataFrame):
 
-    import math
     result_df = df[df['expected_read'].notna()]
     print(result_df)
-    print(result_df['cycles'])
-    numCycles = result_df['cycles'][5]
     numSpots = len(result_df)
+
+    if numSpots == 0:
+        print(f"Error: empty dataframe, len(df)={len(df)}, len(result_df)={len(result_df)}")
+        return None
+
+    numCycles = result_df.iloc[0]['cycles']
     quality_df = pd.DataFrame(columns=['cycle', 'Q_color_transform', 'Q_dephased'])
     for cycle in range(numCycles):
         p_color_transform = 0
         p_dephased = 0
-        Q_color_transform = 0
-        Q_dephased = 0
         for index, spot_row in result_df.iterrows():
             curr_color_transform_basecall = spot_row['max_intensity_read'][:(cycle + 1)]
             curr_dephased_basecall = spot_row['phase_corrected_read'][:(cycle + 1)]
@@ -591,21 +597,32 @@ def create_quality_score_graph(df: pd.DataFrame):
     fig = make_subplots(specs=[[{"secondary_y": True}]])
 
     fig.add_trace(
-        go.Scatter(x=quality_df['cycle'], y=quality_df['Q_color_transform'], name="Q color transform"),
+        go.Scatter(x=quality_df['cycle'], y=quality_df['Q_color_transform'], name="Q max intensity"),
         secondary_y=False,
     )
     fig.add_trace(
         go.Scatter(x=quality_df['cycle'], y=quality_df['Q_dephased'], name="Q phase corrected"),
         secondary_y=False,
     )
+    '''
     fig.add_trace(
-        go.Scatter(x=quality_df['cycle'], y=quality_df['p_color_transform']), name="p color transform",
+        go.Scatter(x=quality_df['cycle'], y=quality_df['p_color_transform'], name="P max intensity"),
         secondary_y=True,
     )
     fig.add_trace(
-        go.Scatter(x=quality_df['cycle'], y=quality_df['p_dephased'], name="p phase corrected"),
+        go.Scatter(x=quality_df['cycle'], y=quality_df['p_dephased'], name="P phase corrected"),
         secondary_y=True,
     )
+    '''
+
+    fig.update_traces(textposition="top center")
+
+    # Set y-axes titles
+    fig.update_yaxes(title_text="<b>Q score<b>", secondary_y=False)
+    fig.update_yaxes(title_text="<b>Error probability</b>", secondary_y=True)
+
+    fig.update_xaxes(title_text='Cycles')
+
 
     fig.show()
     plot1 = plot(fig, output_type='div')
