@@ -554,6 +554,9 @@ def create_read_length_histogram(df_: pd.DataFrame):
 
 def create_quality_score_graph(df: pd.DataFrame):
 
+    if 'expected_read' not in df:
+        return None
+
     result_df = df[df['expected_read'].notna()]
     print(result_df)
     numSpots = len(result_df)
