@@ -535,6 +535,14 @@ def create_read_length_histogram(df_: pd.DataFrame):
     fig = go.Figure()
     fig.add_trace(go.Histogram(x=df_['length_perfect_max_intensity'], name='max_intensity', xbins_size=1))
     fig.add_trace(go.Histogram(x=df_['length_perfect_phase_corrected'], name='phase_corrected', xbins_size=1))
+    fig.add_vline(
+        x=np.mean(df_['length_perfect_max_intensity']), line_dash='dash', line_color='blue',
+        annotation_text="mean", annotation=dict(font_size=23, font_family="Times New Roman")
+    )
+    fig.add_vline(
+        x=np.mean(df_['length_perfect_phase_corrected']), line_dash='dash', line_color='red',
+        annotation_text="mean", annotation=dict(font_size=23, font_family="Times New Roman")
+    )
 
     # Overlay both histograms
     fig.update_layout(
