@@ -11,6 +11,7 @@ import numpy as np
 import os
 import glob
 import math
+from itertools import product
 import ziontools
 from sklearn import linear_model
 import cv2 as cv
@@ -441,8 +442,12 @@ class ReportDetailView(generic.DetailView):
                 print(f"ERROR parsing {basecalls_csv}")
 
         pixel_data_csv = os.path.join(report_full_path, 'spot_pixel_data.csv')
-        triangle_plot = create_spot_triangle_plot(pixel_data_csv) if os.path.exists(pixel_data_csv) else None
-        context["triangle_plot"] = triangle_plot
+        if os.path.exists(pixel_data_csv):
+            try:
+                triangle_plot = create_spot_triangle_plot(pixel_data_csv)
+                context["triangle_plot"] = triangle_plot
+            except pd.errors.EmptyDataError:
+                print(f"ERROR parsing {pixel_data_csv}")
 
         metrics_data_csv = os.path.join(report_full_path, 'metrics.csv')
         if os.path.exists(metrics_data_csv):
@@ -452,14 +457,12 @@ class ReportDetailView(generic.DetailView):
             spot_trajectories_plot = plot(fig, output_type='div')
             context["spot_trajectories_plot"] = spot_trajectories_plot
 
-            context["df_metrics"] = pd.read_csv(pixel_data_csv).to_html()
+            df = pd.read_csv(metrics_data_csv)
+            #context["df_metrics"] = df.to_html()
 
-            print("create run comparison")
-            fig = ziontools.plot_roiset_run_comparison(
-                [metrics_data_csv]
-            )
-            simple_plot = plot(fig, output_type='div')
-            context["simple_plot"] = simple_plot
+            # for each spot in list produce a plot
+            spots = df['spot'].unique()
+            context["spot_intensities_vs_time"] = [plot_spot_intensities(df, spot) for spot in spots]
 
         context["analysis_filenames"] = analysis_filenames
 
@@ -560,7 +563,8 @@ def create_read_length_histogram(df_: pd.DataFrame):
     plot1 = plot(fig, output_type='div')
     return plot1
 
-def create_quality_score_graph(df: pd.DataFrame):
+
+def create_quality_score_graph(df: pd.DataFrame) -> go.Figure | None:
 
     if 'expected_read' not in df:
         return None
@@ -634,6 +638,61 @@ def create_quality_score_graph(df: pd.DataFrame):
 
     fig.update_xaxes(title_text='Cycles')
 
+
+    fig.show()
+    plot1 = plot(fig, output_type='div')
+    return plot1
+
+
+def plot_spot_intensities(df: pd.DataFrame, spot) -> go.Figure | None:
+
+    # df['Ravg'] -= 4096
+    # df['Gavg'] -= 4096
+    # df['Bavg'] -= 4096
+
+    excitations = [445, 525, 590, 645, 365]
+    image_channels = ['R', 'G', 'B']
+
+    channels = list(product(image_channels, excitations))
+    print(len(channels), "channels: ", channels)
+
+    fig = go.Figure()
+
+    for c, channel in enumerate(channels):
+        dft = df.loc[(df['spot'] == spot) & (df['WL'] == channel[1])]
+        X = dft['TS']
+        channelname = channel[0] + 'avg'
+        Y = dft[channelname]
+
+        fig.add_trace(
+            go.Scatter(
+                x=X,
+                y=Y,
+                mode="markers+lines",
+                name=channel[0] + str(channel[1]),
+            )
+        )
+
+    fig.update_layout(
+        title={
+            'text': spot + "  (" + ziontools.common.oligo_sequences.get(spot, "")[:16] + ")",
+            'y': 0.9,
+            'x': 0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'
+        },
+        autosize=False,
+        width=2000,
+        height=1000,
+        xaxis_title="timestamp ms",
+        yaxis_title="Intensity 16bit uncorrected",
+        legend_title="15 channels",
+        font=dict(
+            family="Courier New, monospace",
+            size=18,
+            color="RebeccaPurple"
+        )
+    )
 
     fig.show()
     plot1 = plot(fig, output_type='div')

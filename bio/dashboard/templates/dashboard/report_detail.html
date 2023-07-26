@@ -76,7 +76,7 @@ Location:   <a href="{% static report.path %}">{{ report.path }}</a>  <br>
 
 {% if bar_plot %}
 <div>
-    <h3>Bar plots :</h3> <br>
+    <h3>15D to 4D Spot intensities with basecalls:</h3> <br>
     {{ bar_plot }}
 </div>
 {% endif %}
@@ -88,10 +88,14 @@ Location:   <a href="{% static report.path %}">{{ report.path }}</a>  <br>
 </div>
 {% endif %}
 
-{% if simple_plot %}
+{% if spot_intensities_vs_time %}
 <div>
-    <h3>Spot intensities :</h3> <br>
-    {{ simple_plot }}
+    <h3>15D Spot intensities :</h3> <br>
+    {% for plot in spot_intensities_vs_time %}
+
+        {{ plot }}
+
+    {% endfor %}
 </div>
 {% endif %}
 
