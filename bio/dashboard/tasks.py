@@ -10,6 +10,7 @@ def run_pixel_extraction(raw_path, report_path, roiset_zip_filename):
 
     full_roiset_path = os.path.join(report_path, roiset_zip_filename)
     full_spot_pixel_data_path = os.path.join(report_path, "spot_pixel_data.csv")
+    full_metrics_data_path = os.path.join(report_path, "metrics.csv")
 
     # ziontools.extract_roiset_pixel_data(
     #     raw_path,
@@ -30,6 +31,19 @@ def run_pixel_extraction(raw_path, report_path, roiset_zip_filename):
 
 
     with open(os.path.join(report_path, 'pipeline_out.txt'), 'w') as fd:
+
+        cmd = shlex.split(
+            f"/opt/dashboard/venv/bin/python /opt/tools_playground/wrapper/extract_roiset_metrics_to_csv.py -i {raw_path} -r {full_roiset_path} -o {full_metrics_data_path}"
+        )
+        print(cmd)
+        process = subprocess.Popen(
+            cmd,
+            cwd=report_path,
+            stdout=fd,
+            stderr=subprocess.STDOUT
+        )
+        output = process.communicate()[0]
+        ret = process.wait()
 
         cmd = shlex.split(
             f"/opt/dashboard/venv/bin/python /opt/tools_playground/wrapper/extract_roiset_pixel_data.py -i {raw_path} -r {full_roiset_path} -o {full_spot_pixel_data_path}"
