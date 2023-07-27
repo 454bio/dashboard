@@ -451,14 +451,15 @@ class ReportDetailView(generic.DetailView):
 
         metrics_data_csv = os.path.join(report_full_path, 'metrics.csv')
         if os.path.exists(metrics_data_csv):
-            fig = ziontools.plot_spot_trajectories(
-                metrics_data_csv, ['R365', 'G365', 'B365', 'R445'], ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
-            )
-            spot_trajectories_plot = plot(fig, output_type='div')
-            context["spot_trajectories_plot"] = spot_trajectories_plot
-
             df = pd.read_csv(metrics_data_csv)
             #context["df_metrics"] = df.to_html()
+
+            if 'spot_name' in df:
+                fig = ziontools.plot_spot_trajectories(
+                    metrics_data_csv, ['R365', 'G365', 'B365', 'R445'], ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
+                )
+                spot_trajectories_plot = plot(fig, output_type='div')
+                context["spot_trajectories_plot"] = spot_trajectories_plot
 
             # for each spot in list produce a plot
             if 'spot_index' in df:
