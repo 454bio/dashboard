@@ -461,8 +461,9 @@ class ReportDetailView(generic.DetailView):
             #context["df_metrics"] = df.to_html()
 
             # for each spot in list produce a plot
-            spots = df['spot'].unique()
-            context["spot_intensities_vs_time"] = [plot_spot_intensities(df, spot) for spot in spots]
+            if 'spot_index' in df:
+                spot_indizes = df.spot_index.unique()
+                context["spot_intensities_vs_time"] = [plot_spot_intensities(df, spot_index) for spot_index in spot_indizes]
 
         context["analysis_filenames"] = analysis_filenames
 
@@ -644,7 +645,7 @@ def create_quality_score_graph(df: pd.DataFrame) -> go.Figure | None:
     return plot1
 
 
-def plot_spot_intensities(df: pd.DataFrame, spot) -> go.Figure | None:
+def plot_spot_intensities(df: pd.DataFrame, spot_index) -> go.Figure | None:
 
     # df['Ravg'] -= 4096
     # df['Gavg'] -= 4096
@@ -656,10 +657,13 @@ def plot_spot_intensities(df: pd.DataFrame, spot) -> go.Figure | None:
     channels = list(product(image_channels, excitations))
     print(len(channels), "channels: ", channels)
 
+    df_spot = df.loc[(df['spot_index'] == spot_index)]
+    spot_name = df_spot.spot_name.unique()[0]
+
     fig = go.Figure()
 
     for c, channel in enumerate(channels):
-        dft = df.loc[(df['spot'] == spot) & (df['WL'] == channel[1])]
+        dft = df.loc[(df['spot_index'] == spot_index) & (df['WL'] == channel[1])]
         X = dft['TS']
         channelname = channel[0] + 'avg'
         Y = dft[channelname]
@@ -675,7 +679,7 @@ def plot_spot_intensities(df: pd.DataFrame, spot) -> go.Figure | None:
 
     fig.update_layout(
         title={
-            'text': spot + "  (" + ziontools.common.oligo_sequences.get(spot, "")[:16] + ")",
+            'text': str(spot_index) + ' ' + spot_name + "  (" + ziontools.common.oligo_sequences.get(spot_name, "")[:16] + ")",
             'y': 0.9,
             'x': 0.5,
             'xanchor': 'center',
