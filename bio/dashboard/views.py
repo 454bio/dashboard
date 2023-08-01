@@ -25,6 +25,7 @@ from django.utils import timezone
 import dateutil.parser
 from .tasks import run_pixel_extraction, mul
 from .forms import RoiSetForm
+import itertools
 
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -663,6 +664,8 @@ def plot_spot_intensities(df: pd.DataFrame, spot_index) -> go.Figure | None:
 
     fig = go.Figure()
 
+    symbols = itertools.cycle(range(15))
+
     for c, channel in enumerate(channels):
         dft = df.loc[(df['spot_index'] == spot_index) & (df['WL'] == channel[1])]
         X = dft['TS']
@@ -675,6 +678,8 @@ def plot_spot_intensities(df: pd.DataFrame, spot_index) -> go.Figure | None:
                 y=Y,
                 mode="markers+lines",
                 name=channel[0] + str(channel[1]),
+                marker_size=10,
+                marker_symbol=next(symbols)
             )
         )
 
