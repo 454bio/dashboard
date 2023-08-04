@@ -6,6 +6,7 @@ from django.views import generic
 from .models import Device, Run, Report, Reservoir
 import pandas as pd
 from plotly.offline import plot
+import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
 import os
@@ -24,7 +25,7 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 import dateutil.parser
 from .tasks import run_pixel_extraction, mul
-from .forms import RoiSetForm
+from .forms import RoiSetForm, ExampleModelForm
 import itertools
 
 from django.http import HttpResponseRedirect
@@ -234,6 +235,70 @@ def home(request):
 
     run_histogram = create_run_histogram()
     return render(request, 'home.html', {'devices': devices, 'run_histogram': run_histogram})
+
+
+def compare_runs(request):
+    if request.method == "POST":
+        # create a form instance and populate it with data from the request:
+        form = ExampleModelForm(request.POST)
+        # check whether it's valid:
+        if form.is_valid():
+            # process the data in form.cleaned_data as required
+
+            df_reports = {}
+
+            for i in range(1, 4):
+                report = form.cleaned_data["report"+str(i)]
+                if not report:
+                    continue
+                report_full_path = os.path.join("/static_root", report.path)
+                spot_data_csv = os.path.join(report_full_path, 'spot_pixel_data.csv')
+                if os.path.exists(spot_data_csv):
+                    df_i = pd.read_csv(spot_data_csv)
+                    df_reports[report.name] = df_i
+
+            df = pd.concat(df_reports).reset_index()
+            df.rename(columns={'level_0': 'report', 'level_1': 'old_index'}, inplace=True)
+
+            plots = []
+            # for all spot names:
+            for spot_name in df.spot_name.unique():
+                dfs = df.loc[(df['spot_name'] == spot_name) & (df['cycle'] == 1)] # cycle check may not be necessary, always cycle 1 in that particular dataset
+
+                # melt'ing
+                df_long = dfs[
+                    ['report', 'R365', 'G365', 'B365', 'R445', 'G445', 'B445', 'R525', 'G525', 'B525', 'R590', 'G590',
+                     'B590', 'R645', 'G645', 'B645']].set_index('report').stack().reset_index()
+                df_long.columns = ['report', 'channel', 'intensity']
+
+                fig = px.box(
+                    data_frame=df_long,
+                    y='intensity',
+                    x='channel',
+                    color='report'
+                )
+
+                fig.update_layout(
+                    title_text=spot_name,
+                    title_font_size=30,
+                    font=dict(
+                        size=18,
+                    )
+                )
+
+                fig.show()
+                plot1 = plot(fig, output_type='div')
+                plots.append(plot1)
+
+            return render(request, 'compare_runs.html', {'plots': plots})
+
+            # ...
+            # redirect to a new URL:
+            # return HttpResponseRedirect("/thanks/")
+    else:
+        form = ExampleModelForm()
+    return render(request, 'compare_runs.html', {'form': form})
+
 
 def test(request, run_id):
 
@@ -469,8 +534,8 @@ class ReportDetailView(generic.DetailView):
 
         context["analysis_filenames"] = analysis_filenames
 
-
         return context
+
 
 def create_spot_triangle_plot(pixel_data_csv: str):
 

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if form %}
+<div>
+    <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Submit">
+    </form>
+</div>
+{% endif %}
+
+
+{% autoescape off %}
+{% for plot in plots %}
+    {{ plot }}
+{% endfor %}
+
+{% endautoescape %}
+
+{% endblock %}
+
