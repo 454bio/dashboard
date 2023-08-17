@@ -247,7 +247,7 @@ def compare_runs(request):
 
             df_reports = {}
 
-            for i in range(1, 4):
+            for i in range(1, 7):
                 report = form.cleaned_data["report"+str(i)]
                 if not report:
                     continue
