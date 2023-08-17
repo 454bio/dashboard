@@ -1,6 +1,10 @@
 from typing import List, AnyStr
 
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.contrib.auth import logout
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+
 from django.http import HttpResponse
 from django.views import generic
 from .models import Device, Run, Report, Reservoir
@@ -35,6 +39,14 @@ from django.urls import reverse
 data_root_path = "/static_root/InstrumentData"
 sequencing_file = '/tmp/Sequencing.csv'
 reservoir_file = '/tmp/Reservoir_Inventory.csv'
+
+
+
+def email_check(user):
+    print(user, type(user))
+    if not user.is_authenticated:
+        return False
+    return user.email.endswith("@454.bio")
 
 def extract_datetime(subfolderstr: str) -> str | None:
     """TODO timestamp needs to be provided in iso format instead of being extracted from folder name"""
@@ -225,6 +237,7 @@ def scan():
     '''
 
 
+@user_passes_test(email_check)
 def home(request):
     devices = Device.objects.all()
 
@@ -237,6 +250,12 @@ def home(request):
     return render(request, 'home.html', {'devices': devices, 'run_histogram': run_histogram})
 
 
+def logout_view(request):
+    logout(request)
+    return redirect('dashboard:home')
+
+
+@user_passes_test(email_check)
 def compare_runs(request):
     if request.method == "POST":
         # create a form instance and populate it with data from the request:
@@ -334,27 +353,47 @@ class FormsBasics(View):
         }
         return render(request, 'test.html', context)
 '''
-class DeviceListView(generic.ListView):
+class DeviceListView(LoginRequiredMixin, UserPassesTestMixin, generic.ListView):
     model = Device
+    login_url = "dashboard:home"
+    def test_func(self):
+        return email_check(self.request.user)
 
-class RunListView(generic.ListView):
+
+class RunListView(LoginRequiredMixin, UserPassesTestMixin, generic.ListView):
     model = Run
+    login_url = "dashboard:home"
     ordering = ['-name']
 
-class ReportListView(generic.ListView):
+    def test_func(self):
+        return email_check(self.request.user)
+
+class ReportListView(LoginRequiredMixin, UserPassesTestMixin, generic.ListView):
     model = Report
+    login_url = "dashboard:home"
     ordering = ['-created_at']
+    def test_func(self):
+        return email_check(self.request.user)
 
-class ReservoirListView(generic.ListView):
+class ReservoirListView(LoginRequiredMixin, UserPassesTestMixin, generic.ListView):
     model = Reservoir
+    login_url = "dashboard:home"
     ordering = ['-serial_number']
+    def test_func(self):
+        return email_check(self.request.user)
 
 
-class DeviceDetailView(generic.DetailView):
+class DeviceDetailView(LoginRequiredMixin, UserPassesTestMixin, generic.DetailView):
     model = Device
+    login_url = "dashboard:home"
+    def test_func(self):
+        return email_check(self.request.user)
 
-class RunDetailView(generic.DetailView):
+class RunDetailView(LoginRequiredMixin, UserPassesTestMixin, generic.DetailView):
     model = Run
+    login_url = "dashboard:home"
+    def test_func(self):
+        return email_check(self.request.user)
 
     # override context data
     def get_context_data(self, *args, **kwargs):
@@ -475,8 +514,11 @@ class RunDetailView(generic.DetailView):
         return context
     '''
 
-class ReportDetailView(generic.DetailView):
+class ReportDetailView(LoginRequiredMixin, UserPassesTestMixin, generic.DetailView):
     model = Report
+    login_url = "dashboard:home"
+    def test_func(self):
+        return email_check(self.request.user) #self.request.user.email.endswith("@454.bio")
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)

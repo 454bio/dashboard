@@ -5,6 +5,7 @@ from . import views
 app_name = "dashboard"
 urlpatterns = [
     path('', views.home, name="home"),
+    path('logout', views.logout_view, name='logout'),
     path('devices/', views.DeviceListView.as_view(), name='devices'),
     path('runs/', views.RunListView.as_view(), name='runs'),
     path('reports/', views.ReportListView.as_view(), name='reports'),
