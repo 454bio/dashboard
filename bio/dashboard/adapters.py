@@ -20,7 +20,7 @@ class CustomAccountAdapter(DefaultAccountAdapter):
         return super().clean_email(email)
 
     def is_open_for_signup(self, request):
-        return False  # No email/password signups allowed
+        return True  # No email/password signups allowed
 
 class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
     def pre_social_login(self, request, sociallogin):
