@@ -14,5 +14,5 @@ urlpatterns = [
     path('device/<int:pk>', views.DeviceDetailView.as_view(), name='device-detail'),
     path('run/<int:pk>', views.RunDetailView.as_view(), name='run-detail'),
     path('report/<int:pk>', views.ReportDetailView.as_view(), name='report-detail'),
-    path('test', views.test, name="test"),
+    path('<int:run_id>/test/', views.test, name="test"),
 ]
