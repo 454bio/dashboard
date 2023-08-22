@@ -13,6 +13,7 @@
           <th scope="col">Report</th>
           <th scope="col">Run</th>
           <th scope="col">Device</th>
+          <th scope="col">User</th>
         </tr>
       </thead>
       <tbody>
@@ -23,6 +24,7 @@
           <td><a href="{{ report.get_absolute_url }}"> {{ report.name }} </a></td>
           <td><a href="{{ report.run.get_absolute_url }}">{{ report.run.name }}</a></td>
           <td><a href="{{ report.run.device.get_absolute_url }}">{{ report.run.device.name }}</a></td>
+          <td> {{ report.user.username }} </a></td>
         </tr>
         {% endfor %}
       </tbody>

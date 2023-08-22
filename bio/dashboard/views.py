@@ -4,6 +4,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth import get_user_model
 
 from django.http import HttpResponse
 from django.views import generic
@@ -401,7 +402,8 @@ class RunDetailView(LoginRequiredMixin, generic.DetailView):
 
             report = Report(
                 name=request.POST['title'],
-                run=Run.objects.get(pk=kwargs['pk'])
+                run=Run.objects.get(pk=kwargs['pk']),
+                user=request.user
             )
             report.save()
 

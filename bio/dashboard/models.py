@@ -1,5 +1,6 @@
 from django.db import models
 from django.urls import reverse
+from django.conf import settings
 
 class Device(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
@@ -62,6 +63,10 @@ class Report(models.Model):
     name = models.CharField(max_length=200)
     run = models.ForeignKey(Run, null=True, blank=True, on_delete=models.SET_NULL)
     path = models.CharField(max_length=200, null=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+    )
 
     def get_absolute_url(self):
         return reverse('dashboard:report-detail', args=[str(self.id)])
