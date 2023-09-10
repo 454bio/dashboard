@@ -731,12 +731,13 @@ def create_quality_score_graph(df: pd.DataFrame) -> go.Figure | None:
 
 def plot_spot_intensities(df: pd.DataFrame, spot_index) -> go.Figure | None:
 
-    # df['Ravg'] -= 4096
-    # df['Gavg'] -= 4096
-    # df['Bavg'] -= 4096
-
-    excitations = [445, 525, 590, 645, 365]
-    image_channels = ['R', 'G', 'B']
+    # TODO, HACK, fix me
+    if 'M445' in df.columns:
+        excitations = [445, 525, 590, 645]
+        image_channels = ['M']
+    else:
+        excitations = [445, 525, 590, 645, 365]
+        image_channels = ['R', 'G', 'B']
 
     channels = list(product(image_channels, excitations))
     print(len(channels), "channels: ", channels)
@@ -778,7 +779,7 @@ def plot_spot_intensities(df: pd.DataFrame, spot_index) -> go.Figure | None:
         height=1000,
         xaxis_title="timestamp ms",
         yaxis_title="Intensity 16bit uncorrected",
-        legend_title="15 channels",
+        legend_title=f"{len(channels)} channels",
         font=dict(
             family="Courier New, monospace",
             size=18,
