@@ -732,7 +732,7 @@ def create_quality_score_graph(df: pd.DataFrame) -> go.Figure | None:
 def plot_spot_intensities(df: pd.DataFrame, spot_index) -> go.Figure | None:
 
     # TODO, HACK, fix me
-    if 'M445' in df.columns:
+    if 'Mavg' in df.columns:
         excitations = [445, 525, 590, 645]
         image_channels = ['M']
     else:
